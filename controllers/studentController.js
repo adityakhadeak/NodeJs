@@ -19,3 +19,21 @@ export const createStudent = async (req, res) => {
         });
     }
 };
+
+export const getStudents = async (req, res) => {
+    try {
+        const getStudentsQuery = 'SELECT * FROM Students';
+        const studentsResult = await pool.query(getStudentsQuery);
+        const students = studentsResult.rows;
+        res.status(200).json({
+            message: "Data fetched",
+            data: students
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Internal server error",
+            error
+        });
+    }
+};

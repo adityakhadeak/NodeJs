@@ -20,3 +20,22 @@ export const createRole = async (req, res) => {
         });
     }
 };
+
+export const getRoles=async(req,res)=>{
+    try {
+        const getRolesQuery="SELECT * FROM Roles"
+        const getRolesResult=await pool.query(getRolesQuery)
+        const roles=getRolesResult.rows
+
+        res.status(200).json({
+            message:"Data fetched",
+            data:roles
+        })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Internal server error",
+            error
+        });
+    }
+}

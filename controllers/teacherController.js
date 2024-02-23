@@ -21,3 +21,21 @@ export const createTeacher = async (req, res) => {
         });
     }
 };
+
+export const getTeachers = async (req, res) => {
+    try {
+        const getTeachersQuery = 'SELECT * FROM Teachers';
+        const teachersResult = await pool.query(getTeachersQuery);
+        const teachers = teachersResult.rows;
+        res.status(200).json({
+            message: "Data fetched",
+            data: teachers
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Internal server error",
+            error
+        });
+    }
+};

@@ -19,3 +19,22 @@ export const createEnrollment = async (req, res) => {
         });
     }
 };
+
+export const getEnrollments = async (req, res) => {
+    try {
+        const getEnrollmentsQuery = "SELECT * FROM Enrollments"
+        const getEnrollmentsResult = await pool.query(getEnrollmentsQuery)
+        const enrollments = getEnrollmentsResult.rows
+
+        res.status(200).json({
+            message: "Data fetched",
+            data: enrollments
+        })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Internal server error",
+            error
+        });
+    }
+}

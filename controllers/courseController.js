@@ -16,3 +16,26 @@ export const createCourse = async (req, res) => {
         });
     }
 };
+
+// fetchAll courses
+export const getCourses = async (req, res) => {
+    try {
+        const getAllCoursesQuery = 'SELECT * FROM Courses';
+        const coursesResult = await pool.query(getAllCoursesQuery);
+        const courses = coursesResult.rows;
+
+        res.json({
+            message: "Data fetched",
+            data: courses
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Internal server error",
+            error
+        });
+    }
+};
+
+
+
