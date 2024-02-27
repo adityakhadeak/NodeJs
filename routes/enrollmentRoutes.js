@@ -1,5 +1,5 @@
 import express from 'express'
-import { createEnrollment, getEnrollments, updateEnrollment } from '../controllers/enrollmentController.js'
+import { createEnrollment, deleteEnroll, getEnrollments, updateEnrollment } from '../controllers/enrollmentController.js'
 import authenticateUser from '../middlewares/authenticateUser.js'
 import { isAdmin, isAdminOrTeacher, isStudent } from '../middlewares/authorization.js'
 
@@ -9,6 +9,8 @@ routerEnroll.post('/createenroll',isStudent,createEnrollment)
 
 routerEnroll.post('/getenrolls',authenticateUser,isAdminOrTeacher,getEnrollments)
 
-routerEnroll.put('/updateenrolls/id',authenticateUser,isAdminOrTeacher,updateEnrollment)
+routerEnroll.put('/updateenrolls/:enroll_id',authenticateUser,isAdminOrTeacher,updateEnrollment)
+
+routerEnroll.delete('/deleteenroll/:enroll_id',authenticateUser,isAdminOrTeacher,deleteEnroll)
 
 export default routerEnroll

@@ -40,12 +40,12 @@ export const getEnrollments = async (req, res) => {
 }
 
 export const updateEnrollment = async (req, res) => {
-    const { enrollment_id } = req.params  
+    const { enroll_id } = req.params  
     const { student_id, course_id, enrollment_date } = req.body  
 
     try {
         const updateEnrollmentQuery = 'UPDATE Enrollments SET student_id = $1, course_id = $2, enrollment_date = $3 WHERE enrollment_id = $4 RETURNING *'  
-        const updateEnrollmentValues = [student_id, course_id, enrollment_date, enrollment_id]  
+        const updateEnrollmentValues = [student_id, course_id, enrollment_date, enroll_id]  
         const updatedEnrollmentResult = await pool.query(updateEnrollmentQuery, updateEnrollmentValues)  
 
         if (updatedEnrollmentResult.rowCount === 0) {
@@ -68,3 +68,34 @@ export const updateEnrollment = async (req, res) => {
         })  
     }
 }  
+
+export  const deleteEnroll = async (req, res) => {
+    const { enroll_id } = req.params
+    console.log(enroll_id)
+    try {
+        const getEnrollQuery = "SELECT * FROM Enrollments WHERE enrollment_id = $1";
+        const queryValue=[enroll_id];
+        const getEnrollResult= await pool.query(getEnrollQuery,queryValue);
+        if(getEnrollResult.rowCount===0 )
+        {
+           return  res.status(404).json({
+                message:"Enroll not Found"
+            })
+        }
+
+        const deleteEnrollQuery="DELETE FROM Enrollments WHERE enrollment_id = $1 RETURNING *";
+        const deleteEnrollResult = await pool.query(deleteEnrollQuery,queryValue);
+        console.log(deleteEnrollResult)
+        res.status(200).json({
+            message:"Enrollment deleted successfully",
+            data:deleteEnrollResult.rows[0]
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            message: "Internal server error",
+            error: error
+        })
+    }
+}

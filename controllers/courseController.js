@@ -68,3 +68,31 @@ export const updateCourse = async (req, res) => {
 }  
 
 
+export  const deleteCourse = async (req, res) => {
+    const { course_id } = req.params
+    try {
+        const getCourseQuery = "SELECT * FROM Courses WHERE course_id = $1";
+        const queryValue=[course_id];
+        const getCourseResult= await pool.query(getCourseQuery,queryValue);
+        if(getCourseResult.rowCount===0 )
+        {
+           return  res.status(404).json({
+                message:"Course not Found"
+            })
+        }
+
+        const deleteCourseQuery="DELETE FROM  Courses WHERE course_id = $1 RETURNING *";
+        const deleteCourseResult = await pool.query(deleteCourseQuery,queryValue);
+        res.status(200).json({
+            message:"Course deleted successfully",
+            data:deleteCourseResult.rows[0]
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            message: "Internal server error",
+            error: error
+        })
+    }
+}

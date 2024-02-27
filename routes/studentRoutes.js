@@ -9,7 +9,7 @@ routerStudent.post('/createstudent',createStudent)
 
 routerStudent.get('/getstudents',authenticateUser,isAdmin,getStudents)
 
-routerStudent.put('/updatestudentdetails/:id',authenticateUser,isStudent,updateStudent)
+routerStudent.put('/updatestudentdetails/:student_id',authenticateUser,isStudent,updateStudent)
 
 
 export default routerStudent

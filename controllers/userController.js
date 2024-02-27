@@ -1,41 +1,41 @@
-import { pool } from "../db/dbConnection.js"   
+import { pool } from "../db/dbConnection.js"
 import jwt from 'jsonwebtoken'
-import bcrypt from 'bcrypt'   
+import bcrypt from 'bcrypt'
 
 export const createUser = async (req, res) => {
-    const { username, email, password, role_id, name, age, department } = req.body   
+    const { username, email, password, role_id, name, age, department } = req.body
 
     try {
-        const hashedPassword = await bcrypt.hash(password, 10)   
+        const hashedPassword = await bcrypt.hash(password, 10)
 
         // Insert the user into the Users table
-        const newUserQuery = 'INSERT INTO Users (username, email, password, role_id) VALUES ($1, $2, $3, $4) RETURNING user_id'   
-        const newUserValues = [username, email, hashedPassword, role_id]   
-        const newUserResult = await pool.query(newUserQuery, newUserValues)   
-        const userId = newUserResult.rows[0].user_id   
+        const newUserQuery = 'INSERT INTO Users (username, email, password, role_id) VALUES ($1, $2, $3, $4) RETURNING user_id'
+        const newUserValues = [username, email, hashedPassword, role_id]
+        const newUserResult = await pool.query(newUserQuery, newUserValues)
+        const userId = newUserResult.rows[0].user_id
 
         // Insert data into the relevant table based on the user's role
         if (role_id === 25) {
             // Insert data into the Students table
-            const newStudentQuery = 'INSERT INTO Students (user_id, name, age) VALUES ($1, $2, $3)'   
-            const newStudentValues = [userId, name, age]   
-            await pool.query(newStudentQuery, newStudentValues)   
+            const newStudentQuery = 'INSERT INTO Students (user_id, name, age) VALUES ($1, $2, $3)'
+            const newStudentValues = [userId, name, age]
+            await pool.query(newStudentQuery, newStudentValues)
         } else if (role_id === 26) {
             // Insert data into the Teachers table
-            const newTeacherQuery = 'INSERT INTO Teachers (user_id, name, department) VALUES ($1, $2, $3)'   
-            const newTeacherValues = [userId, name, department]   
-            await pool.query(newTeacherQuery, newTeacherValues)   
+            const newTeacherQuery = 'INSERT INTO Teachers (user_id, name, department) VALUES ($1, $2, $3)'
+            const newTeacherValues = [userId, name, department]
+            await pool.query(newTeacherQuery, newTeacherValues)
         }
 
-        const userData={
-            user:{
+        const userData = {
+            user: {
                 userId,
                 username,
                 role_id
             }
         }
 
-        const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '1h' })    
+        const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '1h' })
 
         res.status(200).json({
             message: "User created",
@@ -46,106 +46,159 @@ export const createUser = async (req, res) => {
             },
             token: token
 
-        })   
+        })
     } catch (error) {
-        console.error(error)   
+        console.error(error)
         res.status(500).json({
             message: "Internal server error",
             error: error
-        })   
+        })
     }
-}   
+}
 
 
 
 export const loginUser = async (req, res) => {
-    const { username, password } = req.body   
+    const { username, password } = req.body
 
     try {
-        const userQuery = 'SELECT * FROM Users WHERE username = $1'   
-        const userValues = [username]   
-        const userResult = await pool.query(userQuery, userValues)   
-        const user = userResult.rows[0]   
+        const userQuery = 'SELECT * FROM Users WHERE username = $1'
+        const userValues = [username]
+        const userResult = await pool.query(userQuery, userValues)
+        const user = userResult.rows[0]
 
         if (!user) {
-            return res.status(401).json({ message: 'User not exists' })   
+            return res.status(401).json({ message: 'User not exists' })
         }
 
         // Verify password
-        const isPasswordValid = await bcrypt.compare(password, user.password)   
+        const isPasswordValid = await bcrypt.compare(password, user.password)
         if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Wrong Password' })   
+            return res.status(401).json({ message: 'Wrong Password' })
         }
-        const userData={
-            user:{
-                userId:user.user_id,
-                username:user.username,
-                role_id:user.role_id
+        const userData = {
+            user: {
+                userId: user.user_id,
+                username: user.username,
+                role_id: user.role_id
             }
         }
 
-        const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '1h' })   
+        const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '1h' })
 
         res.status(200).json({
             message: 'Login successful',
             token: token
-        })   
+        })
     } catch (error) {
-        console.error(error)   
+        console.error(error)
         res.status(500).json({
             message: "Internal server error",
             error: error
-        })   
+        })
     }
-}   
+}
 
 
 export const getUsers = async (req, res) => {
     try {
-        const getUsersQuery = 'SELECT * FROM Users'   
-        const usersResult = await pool.query(getUsersQuery)   
-        const users = usersResult.rows   
+        const getUsersQuery = 'SELECT * FROM Users'
+        const usersResult = await pool.query(getUsersQuery)
+        const users = usersResult.rows
+        users.forEach((user)=>{
+            delete user.password
+        })
         res.status(200).json({
             message: "Data fetched",
             data: users
-        })   
+        })
     } catch (error) {
-        console.error(error)   
+        console.error(error)
         res.status(500).json({
             message: "Internal server error",
             error
-        })   
+        })
     }
-}   
+}
 
-export const updateUserLoginDetails=async(req,res)=>{
-    const { user_id } = req.params   
-    console.log(user_id)
-    const { username, email, password } = req.body   
-
+export const updateUserLoginDetails = async (req, res) => {
+    const { user_id } = req.params
+    if (user_id != req.user.userId) {
+        return res.status(403).json({
+            message: "user can updated only his details",
+        })
+    }
+    const { username, email, password } = req.body
+    const encryptedPass = await bcrypt.hash(password, 10)
     try {
-        const updateQuery = 'UPDATE Users SET username = $1, email = $2, password = $3,  WHERE user_id = $4 RETURNING *'   
-        const updateValues = [username, email, password, user_id]   
-        const updatedResult = await pool.query(updateQuery, updateValues)   
-       
-        if(updatedResult.rowCount===0)
-        {
-           return res.status(404).json({
-                message:"User not found",
+        const updateQuery = 'UPDATE Users SET username = $1, email = $2, password = $3 WHERE user_id = $4 RETURNING *'
+        const updateValues = [username, email, encryptedPass, user_id]
+        const updatedResult = await pool.query(updateQuery, updateValues)
+
+        if (updatedResult.rowCount === 0) {
+            return res.status(404).json({
+                message: "User not found",
             })
         }
-      
-        const updatedUser = updatedResult.rows[0]   
 
+        const updatedUser = updatedResult.rows[0]
+        delete updatedUser['password']
         res.status(200).json({
             message: "User details updated",
             data: updatedUser
-        })   
+        })
     } catch (error) {
-        console.error(error)   
+        console.error(error)
         res.status(500).json({
             message: "Internal server error",
             error: error
-        })   
+        })
+    }
+}
+
+export  const deleteUser = async (req, res) => {
+    const { user_id } = req.params
+    console.log(user_id)
+    let userDetail={}
+    try {
+        const allUserQuery = "SELECT * FROM Users WHERE user_id = $1";
+        const queryValue=[user_id];
+        const allUserResult= await pool.query(allUserQuery,queryValue);
+        if(allUserResult.rowCount===0 )
+        {
+           return  res.status(404).json({
+                message:"User not Found"
+            })
+        }
+        const role_id=allUserResult.rows[0].role_id;
+
+        if(role_id==25)
+        {
+            const deleteStudentQuery = "DELETE FROM Students WHERE user_id = $1 RETURNING *";
+            const deleteStudentResult = await pool.query(deleteStudentQuery,queryValue);
+            userDetail={...userDetail,...deleteStudentResult.rows[0]}
+        }
+        else if(role_id==27)
+        {
+            const deleteTeacherQuery = "DELETE FROM Teachers WHERE user_id = $1 RETURNING *";
+            const deleteTeacherResult = await pool.query(deleteTeacherQuery,queryValue);
+            userDetail={...userDetail,...deleteTeacherResult.rows[0]}
+        }
+
+        const deleteUserQuery="DELETE FROM Users WHERE user_id = $1 RETURNING *";
+        const deleteUserResult = await pool.query(deleteUserQuery,queryValue);
+        userDetail={...userDetail,...deleteUserResult.rows[0]}
+        delete userDetail["password"]
+        res.status(200).json({
+            message:"User deleted successfully",
+            data:userDetail
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            message: "Internal server error",
+            error: error
+        })
     }
 }

@@ -9,7 +9,7 @@ routerTeacher.post('/createteacher',createTeacher)
 
 routerTeacher.get('/getteachers',authenticateUser,isAdmin,getTeachers)
 
-routerTeacher.put('/updateteacherdetails',authenticateUser,isTeacher,updateTeacher)
+routerTeacher.put('/updateteacherdetails/:teacher_id',authenticateUser,isTeacher,updateTeacher)
 
 
 export default routerTeacher
