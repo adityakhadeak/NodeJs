@@ -6,11 +6,23 @@ import routerRole from './routes/roleRoutes.js'
 import routerCourse from './routes/courseRoutes.js'
 import routerEnroll from './routes/enrollmentRoutes.js'
 import dotenv from 'dotenv'
+import rateLimit from 'express-rate-limit';
 
 const app=express();
 
 dotenv.config()
 app.use(express.json())
+
+
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 100,
+    message: 'Too many requests from this IP, please try again later'
+  });
+  
+  
+app.use(limiter);
 
 app.use('/api/users',routerUser)
 app.use('/api/students',routerStudent)
