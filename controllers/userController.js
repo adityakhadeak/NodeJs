@@ -1,8 +1,25 @@
 import { pool } from "../db/dbConnection.js"
+import { body, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 
 export const createUser = async (req, res) => {
+
+     const validationRules = [
+        body('name',"Name field cannot be empty").notEmpty().isString(),
+        body('username',"username cannot be empty").notEmpty().isString(),
+        body('email',"Enter a valid email address").notEmpty().isEmail(),
+        body('password',"Password must be of atleast 7 characters").notEmpty().isString().isLength({min:7}),
+        body('role_id').notEmpty().isNumeric()
+    ];
+
+    await Promise.all(validationRules.map(validation => validation.run(req)))
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() })
+    }
+
     const { username, email, password, role_id, name, age, department } = req.body
 
     try {
@@ -59,6 +76,20 @@ export const createUser = async (req, res) => {
 
 
 export const loginUser = async (req, res) => {
+
+    const validationRules = [
+        body('username',"Username cannot be empty").notEmpty().isString(),
+        body('password').notEmpty().isString(),
+    ];
+
+    await Promise.all(validationRules.map(validation => validation.run(req)))
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() })
+    }
+
+
     const { username, password } = req.body
 
     try {
@@ -122,6 +153,21 @@ export const getUsers = async (req, res) => {
 }
 
 export const updateUserLoginDetails = async (req, res) => {
+
+
+    const validationRules = [
+        body('username').notEmpty().isString(),
+        body('email').notEmpty().isEmail(),
+        body('password',"Password must be of atleast 7 characters").notEmpty().isString().isLength({max:7}),
+    ];
+
+    await Promise.all(validationRules.map(validation => validation.run(req)))
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() })
+    }
+
     const { user_id } = req.params
     if (user_id != req.user.userId) {
         return res.status(403).json({

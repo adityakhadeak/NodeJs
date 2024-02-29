@@ -1,3 +1,4 @@
+import { body, validationResult } from "express-validator"
 import { pool } from "../db/dbConnection.js" 
 
 
@@ -41,6 +42,21 @@ export const getTeachers = async (req, res) => {
 } 
 
 export const updateTeacher = async (req, res) => {
+
+    const validationRules=[
+        body('name',"Name cannot be empty").notEmpty().isString(),
+        body('department',"Department field cannot be empty").notEmpty().isString()
+    ]
+
+    await Promise.all(validationRules.map(validation=>validation.run(req)))
+
+    const errors=validationResult(req)
+
+    if(!errors.isEmpty())
+    {
+       return res.status(400).json({errors:errors.array()})
+    }
+
     const { teacher_id } = req.params 
     const { name, department } = req.body 
 

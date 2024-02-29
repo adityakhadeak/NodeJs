@@ -1,6 +1,21 @@
 import { pool } from "../db/dbConnection.js";
-
+import { body,validationResult } from "express-validator";
 export const createRole = async (req, res) => {
+
+    const validationRules=[
+        body('role_name',"Role Name field cannot be empty").notEmpty().isString(),
+        body('description',"Description cannot be empty").notEmpty().isString()
+    ]
+
+    await Promise.all(validationRules.map((validation)=>validation.run(req)))
+    
+    const errors=validationResult(req)
+
+    if(!errors.isEmpty())
+    {
+        return res.status(400).json({ errors: errors.array() })
+    }
+    
     const { role_name, description } = req.body;
     console.log(req.body)
     try {

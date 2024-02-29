@@ -5,9 +5,9 @@ import { isAdmin, isAdminOrTeacher, isStudent } from '../middlewares/authorizati
 
 const routerEnroll=express()
 
-routerEnroll.post('/createenroll',isStudent,createEnrollment)
+routerEnroll.post('/createenroll',authenticateUser,isStudent,createEnrollment)
 
-routerEnroll.post('/getenrolls',authenticateUser,isAdminOrTeacher,getEnrollments)
+routerEnroll.get('/getenrolls',authenticateUser,isAdminOrTeacher,getEnrollments)
 
 routerEnroll.put('/updateenrolls/:enroll_id',authenticateUser,isAdminOrTeacher,updateEnrollment)
 

@@ -1,6 +1,23 @@
 import { pool } from "../db/dbConnection.js"  
+import { body,validationResult } from "express-validator"
 
 export const createCourse = async (req, res) => {
+
+    const validationRules=[
+        body('course_name',"Course id should not be empty").notEmpty().isNumeric(),
+        body('description',"Description should not be empty").notEmpty().isNumeric(),
+        body('teacher_id',"Teacher id  should not be empty").notEmpty().isDate()
+    ]
+
+    await Promise.all(validationRules.map(validation=>validation.run(req)))
+
+    const errors=validationResult(req)
+
+    if(!errors.isEmpty())
+    {
+        res.status(400).json({errors:errors.array()})
+    }
+
     const { course_name, description, teacher_id } = req.body  
     try {
         const createCourseQuery = 'INSERT INTO Courses (course_name, description, teacher_id) VALUES ($1, $2, $3) RETURNING *'  
