@@ -7,12 +7,16 @@ import routerCourse from './routes/courseRoutes.js'
 import routerEnroll from './routes/enrollmentRoutes.js'
 import dotenv from 'dotenv'
 import rateLimit from 'express-rate-limit';
-
+import helmet from "helmet";
+import xss from 'xss-clean'
 const app=express();
 
 dotenv.config()
-app.use(express.json())
+app.use(express.json({limit:"100kb"}))
 
+app.use(xss())
+
+app.use(helmet())
 
 
 const limiter = rateLimit({

@@ -1,16 +1,16 @@
 import { pool } from "../db/dbConnection.js"
-import { body, validationResult } from 'express-validator';
+import { body, param, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 
 export const createUser = async (req, res) => {
 
      const validationRules = [
-        body('name',"Name field cannot be empty").notEmpty().isString(),
-        body('username',"username cannot be empty").notEmpty().isString(),
-        body('email',"Enter a valid email address").notEmpty().isEmail(),
+        body('name',"Name field cannot be empty").notEmpty().isString().escape(),
+        body('username',"username cannot be empty").notEmpty().isString().escape(),
+        body('email',"Enter a valid email address").notEmpty().isEmail().normalizeEmail(),
         body('password',"Password must be of atleast 7 characters").notEmpty().isString().isLength({min:7}),
-        body('role_id').notEmpty().isNumeric()
+        body('role_id').notEmpty().isNumeric().toInt()
     ];
 
     await Promise.all(validationRules.map(validation => validation.run(req)))
@@ -20,10 +20,22 @@ export const createUser = async (req, res) => {
         return res.status(400).json({ errors: errors.array() })
     }
 
+
     const { username, email, password, role_id, name, age, department } = req.body
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10)
+
+        const isUserExistQuery='SELECT * FROM Users WHERE username = $1 OR email = $2'
+        const isUserExistValues=[username,email]
+        const isUserExistResult=await pool.query(isUserExistQuery,isUserExistValues)
+
+        if( isUserExistResult.rowCount!=0)
+        {
+            return res.status(409).json({
+                message: "User with this email or username already exists"
+            })
+        }
 
         // Insert the user into the Users table
         const newUserQuery = 'INSERT INTO Users (username, email, password, role_id) VALUES ($1, $2, $3, $4) RETURNING user_id'
@@ -78,7 +90,7 @@ export const createUser = async (req, res) => {
 export const loginUser = async (req, res) => {
 
     const validationRules = [
-        body('username',"Username cannot be empty").notEmpty().isString(),
+        body('username',"Username cannot be empty").notEmpty().isString().escape(),
         body('password').notEmpty().isString(),
     ];
 
@@ -156,9 +168,10 @@ export const updateUserLoginDetails = async (req, res) => {
 
 
     const validationRules = [
-        body('username').notEmpty().isString(),
-        body('email').notEmpty().isEmail(),
-        body('password',"Password must be of atleast 7 characters").notEmpty().isString().isLength({max:7}),
+        body('username').notEmpty().isString().escape(),
+        body('email').notEmpty().isEmail().normalizeEmail(),
+        body('password',"Password must be of atleast 7 characters").notEmpty().isString().isLength({min:7}),
+        param('user_id', "User ID should be numeric").isNumeric().toInt()
     ];
 
     await Promise.all(validationRules.map(validation => validation.run(req)))
@@ -171,7 +184,7 @@ export const updateUserLoginDetails = async (req, res) => {
     const { user_id } = req.params
     if (user_id != req.user.userId) {
         return res.status(403).json({
-            message: "user can updated only his details",
+            message: "Invalid User Token",
         })
     }
     const { username, email, password } = req.body
@@ -203,8 +216,27 @@ export const updateUserLoginDetails = async (req, res) => {
 }
 
 export  const deleteUser = async (req, res) => {
+
+    const validationRules=[
+        param('user_id', "User ID should be numeric").isNumeric().toInt()
+    ]
+
+    await Promise.all(validationRules.map(validation=>validation.run(req)))
+
+    const errors=validationResult(req)
+
+    if(!errors.isEmpty())
+    {
+        return res.status(400).json({errors:errors.array()})
+    }
+
     const { user_id } = req.params
-    console.log(user_id)
+    if (user_id != req.user.userId) {
+        return res.status(403).json({
+            message: "Invalid User Token (Cannot authenticate seems other users deleting someones other account)",
+        })
+    }
+
     let userDetail={}
     try {
         const allUserQuery = "SELECT * FROM Users WHERE user_id = $1";

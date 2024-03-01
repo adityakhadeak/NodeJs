@@ -1,7 +1,8 @@
-import { validationResult, body } from "express-validator";
+import { validationResult, body, param } from "express-validator";
 import { pool } from "../db/dbConnection.js";
 
 export const createStudent = async (req, res) => {
+
     try {
         const { user_id, name, age } = req.body;
         const createStudentQuery = 'INSERT INTO Students (user_id, name, age) VALUES ($1, $2, $3) RETURNING *'
@@ -42,9 +43,10 @@ export const getStudents = async (req, res) => {
 export const updateStudent = async (req, res) => {
     console.log(typeof req.body.age)
     const validationRules = [
-        body('name', "Name cannot be empty").notEmpty().isString(),
-        body('age', "Age field cannot be empty").notEmpty().isNumeric(),
-        body('age', "Age must be a number").isNumeric()
+        body('name', "Name cannot be empty").notEmpty().isString().escape(),
+        body('age', "Age field cannot be empty").notEmpty().isNumeric().toInt(),
+        body('age', "Age must be a number").isNumeric().toInt(),
+        param('student_id', "Student ID should be numeric").isNumeric().toInt()
     ]
 
     await Promise.all(validationRules.map(validation => validation.run(req)))

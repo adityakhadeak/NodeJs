@@ -44,8 +44,10 @@ export const getTeachers = async (req, res) => {
 export const updateTeacher = async (req, res) => {
 
     const validationRules = [
-        body('name', "Name cannot be empty").notEmpty().isString(),
-        body('department', "Department field cannot be empty").notEmpty().isString()
+        body('name', "Name cannot be empty").notEmpty().isString().escape(),
+        body('department', "Department field cannot be empty").notEmpty().isString().escape(),
+        param('teacher_id', "Teacher ID should be numeric").isNumeric().toInt()
+
     ]
 
     await Promise.all(validationRules.map(validation => validation.run(req)))

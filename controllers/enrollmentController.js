@@ -1,9 +1,20 @@
 import { pool } from "../db/dbConnection.js"
-import { body, validationResult } from "express-validator"
+import { body, param, validationResult } from "express-validator"
+
+
+const isValidUser = async (user_id, student_id) => {
+    const findStudentQuery = "SELECT * FROM Students WHERE user_id = $1"
+    const findStudentValues = [user_id]
+    const findStudentResult = await pool.query(findStudentQuery, findStudentValues)
+    const foundStudent = findStudentResult.rows[0]
+    
+    return student_id===foundStudent.student_id
+}
+
 export const createEnrollment = async (req, res) => {
     const validationRules = [
-        body('student_id', "Student id should not be empty").notEmpty().isNumeric(),
-        body('course_id', "Course id should not be empty").notEmpty().isNumeric(),
+        body('student_id', "Student id should not be empty").notEmpty().isNumeric().toInt(),
+        body('course_id', "Course id should not be empty").notEmpty().isNumeric().toInt(),
         body('enrollment_date', "Date field should not be empty").notEmpty().isDate()
 
     ]
@@ -20,6 +31,13 @@ export const createEnrollment = async (req, res) => {
     const { student_id, course_id, enrollment_date } = req.body
     try {
 
+        if (! await isValidUser(req.user.userId, student_id))
+        {
+            return res.status(403).json({
+                message: "Invalid User Token (Cannot authenticate seems other users deleting someones other account)",
+            })
+        }
+
         const checkEnrollPresentQuery = "SELECT * FROM Enrollments WHERE student_id = $1"
         const checkEnrollPresentValue = [student_id]
         const checkEnrollPresentResult = await pool.query(checkEnrollPresentQuery, checkEnrollPresentValue)
@@ -33,6 +51,8 @@ export const createEnrollment = async (req, res) => {
                 message: "Already Enrolled"
             })
         }
+
+
 
         const createEnrollmentQuery = 'INSERT INTO Enrollments (student_id, course_id, enrollment_date) VALUES ($1, $2, $3) RETURNING *'
         const createEnrollmentValues = [student_id, course_id, enrollment_date]
@@ -73,9 +93,10 @@ export const getEnrollments = async (req, res) => {
 export const updateEnrollment = async (req, res) => {
 
     const validationRules = [
-        body('student_id', "Student id should not be empty").notEmpty().isNumeric(),
-        body('course_id', "Course id should not be empty").notEmpty().isNumeric(),
-        body('enrollment_date', "Date field should not be empty").notEmpty().isDate()
+        body('student_id', "Student id should not be empty").notEmpty().isNumeric().toInt(),
+        body('course_id', "Course id should not be empty").notEmpty().isNumeric().toInt,
+        body('enrollment_date', "Date field should not be empty").notEmpty().isDate(),
+        param('enroll_id', "Enroll ID should be numeric").isNumeric().toInt()
 
     ]
 
@@ -119,8 +140,22 @@ export const updateEnrollment = async (req, res) => {
 }
 
 export const deleteEnroll = async (req, res) => {
+
+    console.log(req.params.enroll_id)
+    const validationRules = [
+        param('enroll_id',"Enroll ID must be a numeric value").isNumeric().toInt()
+    ]
+
+    await Promise.all(validationRules.map(validation => validation.run(req)))
+
+    const errors = validationResult(req)
+
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() })
+    }
+
     const { enroll_id } = req.params
-    console.log(enroll_id)
+
     try {
         const getEnrollQuery = "SELECT * FROM Enrollments WHERE enrollment_id = $1";
         const queryValue = [enroll_id];

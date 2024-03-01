@@ -3,8 +3,8 @@ import { body,validationResult } from "express-validator";
 export const createRole = async (req, res) => {
 
     const validationRules=[
-        body('role_name',"Role Name field cannot be empty").notEmpty().isString(),
-        body('description',"Description cannot be empty").notEmpty().isString()
+        body('role_name',"Role Name field cannot be empty").notEmpty().isString().escape(),
+        body('description',"Description cannot be empty").notEmpty().isString().escape()
     ]
 
     await Promise.all(validationRules.map((validation)=>validation.run(req)))

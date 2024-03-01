@@ -1,12 +1,12 @@
 import { pool } from "../db/dbConnection.js"
-import { body, validationResult } from "express-validator"
+import { body, param, validationResult } from "express-validator"
 
 export const createCourse = async (req, res) => {
 
     const validationRules = [
-        body('course_name', "Course id should not be empty").notEmpty().isString(),
-        body('description', "Description should not be empty").notEmpty().isString(),
-        body('teacher_id', "Teacher id  should not be empty").notEmpty().isNumeric()
+        body('course_name', "Course id should not be empty").notEmpty().isString().escape(),
+        body('description', "Description should not be empty").notEmpty().isString().escape(),
+        body('teacher_id', "Teacher id  should not be empty").notEmpty().isNumeric().toInt()
     ]
 
     await Promise.all(validationRules.map(validation => validation.run(req)))
@@ -14,7 +14,7 @@ export const createCourse = async (req, res) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
-        res.status(400).json({ errors: errors.array() })
+        return res.status(400).json({ errors: errors.array() })
     }
 
     const { course_name, description, teacher_id } = req.body
@@ -71,9 +71,9 @@ export const getCourses = async (req, res) => {
 export const updateCourse = async (req, res) => {
 
     const validationRules = [
-        body('course_name', "Course id should not be empty").notEmpty().isString(),
-        body('description', "Description should not be empty").notEmpty().isString(),
-        body('teacher_id', "Teacher id  should not be empty").notEmpty().isNumeric()
+        body('course_name', "Course id should not be empty").notEmpty().isString().escape(),
+        body('description', "Description should not be empty").notEmpty().isString().escape(),
+        body('teacher_id', "Teacher id  should not be empty").notEmpty().isNumeric().toInt()
     ]
 
     await Promise.all(validationRules.map(validation => validation.run(req)))
@@ -81,7 +81,7 @@ export const updateCourse = async (req, res) => {
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
-        res.status(400).json({ errors: errors.array() })
+       return res.status(400).json({ errors: errors.array() })
     }
 
 
@@ -116,6 +116,19 @@ export const updateCourse = async (req, res) => {
 
 
 export const deleteCourse = async (req, res) => {
+
+    const validationRules=[
+        param('course_id',"Course ID must be numeric").isNumeric().toInt()
+    ]
+
+    await Promise.all(validationRules.map(validation=>validation.run(req)))
+
+    const errors=validationResult(req)
+
+    if(!errors.isEmpty())
+    {
+        return res.status(400).json({errors:errors.array()})
+    }
     const { course_id } = req.params
     try {
         const getCourseQuery = "SELECT * FROM Courses WHERE course_id = $1";
