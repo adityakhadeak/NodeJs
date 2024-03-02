@@ -13,6 +13,8 @@ This is a sample project for demonstrating Crud Operations in Node js Using Post
 
 ## API Documentation
 - GET /api/users/:id - Get user details
+- For more information related API documentation visit https://documenter.getpostman.com/view/33131469/2sA2xb6Fn4
+  
 
 ## Development Setup
 1. Install Node.js and npm.
