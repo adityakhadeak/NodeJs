@@ -58,7 +58,7 @@ export const createEnrollment = async (req, res) => {
         const createEnrollmentValues = [student_id, course_id, enrollment_date]
         const createdEnrollmentResult = await pool.query(createEnrollmentQuery, createEnrollmentValues)
         const createdEnrollment = createdEnrollmentResult.rows[0]
-        res.status(200).json({
+        res.status(201).json({
             message: "student added",
             data: createdEnrollment
         })

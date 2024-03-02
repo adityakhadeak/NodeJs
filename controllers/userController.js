@@ -64,9 +64,9 @@ export const createUser = async (req, res) => {
             }
         }
 
-        const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '1h' })
+        const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '3d' })
 
-        res.status(200).json({
+        res.status(201).json({
             message: "User created",
             data: {
                 username: username,
@@ -127,7 +127,7 @@ export const loginUser = async (req, res) => {
             }
         }
 
-        const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '1h' })
+        const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '3d' })
 
         res.status(200).json({
             message: 'Login successful',

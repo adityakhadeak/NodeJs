@@ -23,7 +23,7 @@ export const createRole = async (req, res) => {
         const createRoleValues = [role_name, description];
         const createdRoleResult = await pool.query(createRoleQuery, createRoleValues);
         const createdRole = createdRoleResult.rows[0];
-        res.status(200).json({
+        res.status(201).json({
             message: "Role created",
             data: createdRole
         });

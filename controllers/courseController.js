@@ -38,7 +38,11 @@ export const createCourse = async (req, res) => {
         const createCourseValues = [course_name, description, teacher_id]
         const createdCourseResult = await pool.query(createCourseQuery, createCourseValues)
         const createdCourse = createdCourseResult.rows[0]
-        res.json(createdCourse)
+        res.status(201).json(
+            {
+                message: "Course created successfully"
+            }
+        )
     } catch (error) {
         console.error(error)
         res.status(500).json({

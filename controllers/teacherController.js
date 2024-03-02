@@ -1,4 +1,4 @@
-import { body, validationResult } from "express-validator"
+import { body, param, validationResult } from "express-validator"
 import { pool } from "../db/dbConnection.js"
 
 
@@ -10,7 +10,7 @@ export const createTeacher = async (req, res) => {
         const createTeacherValues = [user_id, name, department]
         const createdTeacherResult = await pool.query(createTeacherQuery, createTeacherValues)
         const createdTeacher = createdTeacherResult.rows[0]
-        res.status(200).json({
+        res.status(201).json({
             message: "teacher addded",
             data: createdTeacher
         })
@@ -46,8 +46,7 @@ export const updateTeacher = async (req, res) => {
     const validationRules = [
         body('name', "Name cannot be empty").notEmpty().isString().escape(),
         body('department', "Department field cannot be empty").notEmpty().isString().escape(),
-        param('teacher_id', "Teacher ID should be numeric").isNumeric().toInt()
-
+        param('teacher_id',"Teacher Id must be numeric value").isNumeric().toInt()
     ]
 
     await Promise.all(validationRules.map(validation => validation.run(req)))
